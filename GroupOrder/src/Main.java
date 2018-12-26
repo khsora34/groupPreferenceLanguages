@@ -15,10 +15,20 @@ public class Main {
         try {
             connection.connectDb();
 
-            connection.savePilgrims(new Pilgrim[]{new Pilgrim("Pedro", Language.FRENCH), new Pilgrim(1, "Bien", Language.POLISH)});
+            connection.loadPilgrimResources();
+            connection.loadGroupsResources();
 
-            for (Pilgrim p: connection.loadPilgrimResources()) {
-                System.out.println(p);
+            connection.savePilgrims(new Pilgrim[]{new Pilgrim(1, "Pedro", Language.FRENCH, true), new Pilgrim(3, "Bien", Language.POLISH, false), new Pilgrim(29, "ISI", Language.FRENCH, true)});
+
+            for (Pilgrim p: connection.loadPilgrimResources().values()) {
+                System.out.println(p + "\n");
+            }
+
+            connection.saveGroup(new Group(2, "LALALAND"));
+            connection.saveGroup(new Group(34, "NOCASA"));
+
+            for (Group g: connection.loadGroupsResources().values()) {
+                System.out.println(g + "\n");
             }
 
 

@@ -62,6 +62,8 @@ public class MainInterface {
     }
 
     private void addPilgrim() {
+        int id = connection.getLastPilgrimId();
+
         System.out.println("ENTER PILGRIM NAME: ");
 
         String name = input.readString();
@@ -87,7 +89,7 @@ public class MainInterface {
 
         } while (language == null);
 
-        Pilgrim p = new Pilgrim(name, language, isLeader);
+        Pilgrim p = new Pilgrim(id, name, language, isLeader);
 
         List<Language> otherLanguages = new ArrayList<>();
 
@@ -112,7 +114,63 @@ public class MainInterface {
 
         p.setOtherLanguage(otherLanguages);
 
-        //pilgrims.put()
+        pilgrims.put(id, p);
+    }
+
+    private void addGroup() {
+        int id = connection.getLastPilgrimId();
+
+        System.out.println("ENTER PILGRIM NAME: ");
+
+        String name = input.readString();
+
+        System.out.println("IS THE PILGRIM A LEADER? (1 IF YES, OTHERWISE NO): ");
+
+        boolean isLeader = input.readNumber() == 1;
+
+        System.out.println("AVAILABLE LANGUAGES: ");
+
+        for (Language l : Language.values()) {
+            System.out.print(l.toString() + ", ");
+        }
+
+        Language language = null;
+
+        do {
+            System.out.println("ENTER THE PILGRIM'S NATIVE LANGUAGE: ");
+            language = Utils.getLanguage(input.readString());
+            if (language == null) {
+                System.out.println("LANGUAGE NOT SUPPORTED, TRY AGAIN. ");
+            }
+
+        } while (language == null);
+
+        Pilgrim p = new Pilgrim(id, name, language, isLeader);
+
+        List<Language> otherLanguages = new ArrayList<>();
+
+        String inputString = "";
+
+        do {
+            System.out.println("ENTER ANY OTHER LANGUAGE THE PILGRIM KNOWS (TYPE '0' TO END): ");
+
+            inputString = input.readString();
+
+            if (!inputString.equals("0")) {
+                Language newLanguage = Utils.getLanguage(inputString);
+
+                if (newLanguage == null) {
+                    System.out.println("LANGUAGE NOT SUPPORTED, TRY AGAIN. ");
+                } else {
+                    System.out.println("ADDED " + newLanguage.name() + " TO THIS PILGRIM.");
+                }
+            }
+
+        } while (!inputString.equals("0"));
+
+        p.setOtherLanguage(otherLanguages);
+
+        pilgrims.put(id, p);
     }
 
     public static void main(String[] args) {

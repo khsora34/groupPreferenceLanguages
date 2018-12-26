@@ -10,15 +10,6 @@ public class Pilgrim {
     private int groupId;
     private boolean isLeader;
 
-    public Pilgrim(String name, Language nativeLanguage, boolean isLeader) {
-        id = -1;
-        this.name = name;
-        this.nativeLanguage = nativeLanguage;
-        otherLanguages = new ArrayList<>();
-        groupId = -1;
-        this.isLeader = isLeader;
-    }
-
     public Pilgrim(int id, String name, Language nativeLanguage, boolean isLeader) {
         this.id = id;
         this.name = name;
@@ -93,7 +84,8 @@ public class Pilgrim {
         for (Language e : otherLanguages) {
             start.concat(", " + e.toString());
         }
-        start.concat(groupId == -1 ? "\nStill has no group" : "\nWorks in group " + groupId);
+        start = start.concat(groupId == -1 ? "\nStill has no group." : "\nWorks in group " + groupId + ".");
+        start = start.concat("\nThis pilgrim is " + (isLeader ? "" : "not ") + "a leader.");
         return start;
     }
 }

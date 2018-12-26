@@ -33,13 +33,13 @@ public class ConnectionManager {
                 "id INTEGER PRIMARY KEY, " +
                 "name TEXT NOT NULL, " +
                 "nativeLanguage TEXT NOT NULL, " +
-                "isLeader INTEGER NOT NULL" +
+                "isLeader INTEGER NOT NULL, " +
                 "groupId INTEGER" +
                 ");";
 
         String groupQuery = "CREATE TABLE IF NOT EXISTS groupRoom (" +
                 "id INTEGER PRIMARY KEY, " +
-                "roomId TEXT NOT NULL, " +
+                "roomId TEXT NOT NULL" +
                 ");";
 
         String languagesQuery = "CREATE TABLE IF NOT EXISTS spokenLanguages (" +
@@ -83,7 +83,7 @@ public class ConnectionManager {
     }
 
     public Map<Integer, Pilgrim> loadPilgrimResources() throws SQLException {
-        String query = "SELECT id, name, nativeLanguage, isLeader AS maxId FROM pilgrim";
+        String query = "SELECT id, name, nativeLanguage, isLeader FROM pilgrim";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
         ResultSet rs = prepSt.executeQuery();
@@ -94,7 +94,7 @@ public class ConnectionManager {
             int id = rs.getInt("id");
             String name = rs.getString("name");
             String languageString = rs.getString("nativeLanguage");
-            boolean isLeader = rs.getBoolean("isLeader");
+            boolean isLeader = rs.getInt("isLeader") == 1;
             lastPilgrimId = id > lastPilgrimId ? id : lastPilgrimId;
 
             Language language = Utils.getLanguage(languageString);
@@ -201,7 +201,7 @@ public class ConnectionManager {
     }
 
     private void insertGroup(Group group) throws SQLException {
-        String query = "INSERT INTO groupRoom (id, roomId) VALUES (?,?)";
+        String query = "INSERT INTO groupRoom (id, roomId) VALUES (?,?);";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
         prepSt.setInt(1, group.getId());
@@ -261,7 +261,9 @@ public class ConnectionManager {
     }
 
     public int getLastPilgrimId() {
-        return lastPilgrimId;
+        int ret = lastPilgrimId;
+        lastPilgrimId++;
+        return ret;
     }
 
     public void setLastPilgrimId(int lastPilgrimId) {
@@ -269,7 +271,9 @@ public class ConnectionManager {
     }
 
     public int getLastGroupId() {
-        return lastGroupId;
+        int ret = lastGroupId;
+        lastGroupId++;
+        return ret;
     }
 
     public void setLastGroupId(int lastGroupId) {

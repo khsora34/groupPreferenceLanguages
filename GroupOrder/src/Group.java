@@ -26,6 +26,6 @@ public class Group {
 
     @Override
     public String toString() {
-        return "This room is number " + id + "with name " + roomName;
+        return "This room is number " + id + " with name " + roomName;
     }
 }
