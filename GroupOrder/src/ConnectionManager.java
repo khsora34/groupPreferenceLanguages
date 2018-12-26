@@ -6,6 +6,8 @@ import java.util.Map;
 public class ConnectionManager {
 
     private boolean autoCommit = true;
+    private int lastPilgrimId = 0;
+    private int lastGroupId = 0;
     private Connection conn = null;
 
     private Connection initDbConnection() throws SQLException {
@@ -31,14 +33,13 @@ public class ConnectionManager {
                 "id INTEGER PRIMARY KEY, " +
                 "name TEXT NOT NULL, " +
                 "nativeLanguage TEXT NOT NULL, " +
+                "isLeader INTEGER NOT NULL" +
                 "groupId INTEGER" +
                 ");";
 
         String groupQuery = "CREATE TABLE IF NOT EXISTS groupRoom (" +
                 "id INTEGER PRIMARY KEY, " +
                 "roomId TEXT NOT NULL, " +
-                "leaderId INTEGER, " +
-                "FOREIGN KEY (leaderId) REFERENCES pilgrim(id) ON DELETE RESTRICT ON UPDATE CASCADE" +
                 ");";
 
         String languagesQuery = "CREATE TABLE IF NOT EXISTS spokenLanguages (" +
@@ -61,8 +62,28 @@ public class ConnectionManager {
 
     }
 
-    public Pilgrim[] loadPilgrimResources() throws SQLException {
-        String query = "SELECT * FROM pilgrim";
+    public Map<Integer, Group> loadGroupsResources() throws SQLException {
+        String query = "SELECT * FROM groupRoom";
+        PreparedStatement prepSt = conn.prepareStatement(query);
+
+        ResultSet rs = prepSt.executeQuery();
+
+        Map<Integer, Group> map = new HashMap<>();
+
+        while (rs.next()) {
+            int id = rs.getInt("id");
+            String name = rs.getString("roomId");
+
+            lastGroupId = id > lastGroupId ? id : lastGroupId;
+
+            map.put(id, new Group(id, name));
+        }
+
+        return map;
+    }
+
+    public Map<Integer, Pilgrim> loadPilgrimResources() throws SQLException {
+        String query = "SELECT id, name, nativeLanguage, isLeader AS maxId FROM pilgrim";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
         ResultSet rs = prepSt.executeQuery();
@@ -73,13 +94,16 @@ public class ConnectionManager {
             int id = rs.getInt("id");
             String name = rs.getString("name");
             String languageString = rs.getString("nativeLanguage");
+            boolean isLeader = rs.getBoolean("isLeader");
+            lastPilgrimId = id > lastPilgrimId ? id : lastPilgrimId;
+
             Language language = Utils.getLanguage(languageString);
 
             if (language == null) {
                 System.out.println("THE PILGRIM WITH ID " + id + " HAS A PROBLEM WITH HIS NATIVE LANGUAGE " + languageString);
             }
 
-            Pilgrim newPilgrim = new Pilgrim(id, name, language);
+            Pilgrim newPilgrim = new Pilgrim(id, name, language, isLeader);
 
             map.put(id, newPilgrim);
         }
@@ -117,20 +141,21 @@ public class ConnectionManager {
         }
 
 
-        return map.values().toArray(new Pilgrim[0]);
+        return map;
     }
 
-    private void insertPilgrim(Pilgrim p, int place) throws SQLException {
-        String pilgrimQuery = "INSERT INTO pilgrim (id, name, nativeLanguage, groupId) VALUES (?,?,?,?)";
+    private void insertPilgrim(Pilgrim p) throws SQLException {
+        String pilgrimQuery = "INSERT INTO pilgrim (id, name, nativeLanguage, isLeader, groupId) VALUES (?,?,?,?,?)";
         String languagesQuery = "INSERT INTO spokenLanguages (pilgrimId, language) VALUES (?,?)";
 
         PreparedStatement pilgrimSt = conn.prepareStatement(pilgrimQuery);
         PreparedStatement langSt = conn.prepareStatement(languagesQuery);
 
-        pilgrimSt.setInt(1, place);
+        pilgrimSt.setInt(1, p.getId());
         pilgrimSt.setString(2, p.getName());
         pilgrimSt.setString(3, p.getNativeLanguage().getShortValue());
-        pilgrimSt.setInt(4, p.getGroupId());
+        pilgrimSt.setInt(4, p.isLeader() ? 1 : 0);
+        pilgrimSt.setInt(5, p.getGroupId());
         pilgrimSt.executeUpdate();
 
         langSt.setInt(1, p.getId());
@@ -166,42 +191,42 @@ public class ConnectionManager {
     }
 
     public void savePilgrims(Pilgrim[] pilgrims) throws SQLException {
-        ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) FROM pilgrim");
-
-        if (!rs.next()) {
-            System.out.println("COUNT DOES NOT WORK WHEN SAVING PILGRIMS");
-            return;
-        }
-
-        int lastId = rs.getInt(1);
-
         for (Pilgrim p : pilgrims) {
-            if (p.getId() == -1) {
-                insertPilgrim(p, ++lastId);
-            } else {
+            if (p.getId() <= lastPilgrimId) {
                 updatePilgrim(p);
+            } else {
+                insertPilgrim(p);
             }
         }
     }
 
-    public void saveGroup(Group group) throws SQLException {
-        ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) FROM groupRoom");
-
-        if (!rs.next()) {
-            System.out.println("COUNT DOES NOT WORK WHEN SAVING GROUP");
-            return;
-        }
-
-        String query = "INSERT INTO groupRoom (id, roomId, leader) VALUES (?,?,?)";
+    private void insertGroup(Group group) throws SQLException {
+        String query = "INSERT INTO groupRoom (id, roomId) VALUES (?,?)";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
-        prepSt.setInt(1, rs.getInt(1));
-        prepSt.setString(2, group.getName());
-        prepSt.setInt(3, group.getLeader().getId());
+        prepSt.setInt(1, group.getId());
+        prepSt.setString(2, group.getRoomName());
 
         prepSt.executeUpdate();
     }
 
+    private void updateGroup(Group group) throws SQLException {
+        String query = "UPDATE groupRoom SET roomId = ? WHERE id = ?";
+        PreparedStatement prepSt = conn.prepareStatement(query);
+
+        prepSt.setString(1, group.getRoomName());
+        prepSt.setInt(2, group.getId());
+
+        prepSt.executeUpdate();
+    }
+
+    public void saveGroup(Group group) throws SQLException {
+        if (group.getId() <= lastGroupId) {
+            updateGroup(group);
+        } else {
+            insertGroup(group);
+        }
+    }
 
     public boolean connectDb() throws SQLException {
         try {
@@ -219,7 +244,6 @@ public class ConnectionManager {
         }
 
         return true;
-
     }
 
     public void onError() {
@@ -234,5 +258,21 @@ public class ConnectionManager {
     public void disconnect() throws SQLException {
         conn.commit();
         conn.close();
+    }
+
+    public int getLastPilgrimId() {
+        return lastPilgrimId;
+    }
+
+    public void setLastPilgrimId(int lastPilgrimId) {
+        this.lastPilgrimId = lastPilgrimId;
+    }
+
+    public int getLastGroupId() {
+        return lastGroupId;
+    }
+
+    public void setLastGroupId(int lastGroupId) {
+        this.lastGroupId = lastGroupId;
     }
 }

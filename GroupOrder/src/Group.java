@@ -1,44 +1,31 @@
 public class Group {
 
     private int id;
-    private String name;
-    private Pilgrim leader;
-    private Pilgrim[] party;
+    private String roomName;
 
-    public Group(Pilgrim leader, Pilgrim[] party) {
-        this.leader = leader;
-        this.party = party;
+    public Group(int id, String roomName) {
+        this.id = id;
+        this.roomName = roomName;
     }
 
     public int getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Pilgrim getLeader() {
-        return leader;
-    }
-
-    public Pilgrim[] getParty() {
-        return party;
+    public String getRoomName() {
+        return roomName;
     }
 
     public void setId(int id) {
         this.id = id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
     }
 
-    public void setLeader(Pilgrim leader) {
-        this.leader = leader;
-    }
-
-    public void setParty(Pilgrim[] party) {
-        this.party = party;
+    @Override
+    public String toString() {
+        return "This room is number " + id + "with name " + roomName;
     }
 }

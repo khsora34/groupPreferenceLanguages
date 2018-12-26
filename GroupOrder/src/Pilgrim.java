@@ -8,22 +8,35 @@ public class Pilgrim {
     private Language nativeLanguage;
     private List<Language> otherLanguages;
     private int groupId;
+    private boolean isLeader;
 
-    public Pilgrim(String name, Language nativeLanguage) {
+    public Pilgrim(String name, Language nativeLanguage, boolean isLeader) {
         id = -1;
         this.name = name;
         this.nativeLanguage = nativeLanguage;
         otherLanguages = new ArrayList<>();
         groupId = -1;
+        this.isLeader = isLeader;
     }
 
-    public Pilgrim(int id, String name, Language nativeLanguage) {
+    public Pilgrim(int id, String name, Language nativeLanguage, boolean isLeader) {
         this.id = id;
         this.name = name;
         this.nativeLanguage = nativeLanguage;
         otherLanguages = new ArrayList<>();
         groupId = -1;
+        this.isLeader = isLeader;
     }
+
+    public Pilgrim(int id, String name, Language nativeLanguage, int groupId, boolean isLeader) {
+        this.id = id;
+        this.name = name;
+        this.nativeLanguage = nativeLanguage;
+        otherLanguages = new ArrayList<>();
+        this.groupId = groupId;
+        this.isLeader = isLeader;
+    }
+
 
     public int getId() {
         return id;
@@ -65,11 +78,19 @@ public class Pilgrim {
         this.groupId = groupId;
     }
 
+    public boolean isLeader() {
+        return isLeader;
+    }
+
+    public void setLeader(boolean leader) {
+        isLeader = leader;
+    }
+
     @Override
     public String toString() {
         String start = "Pilgrim with id " + id + ", named " + name + ".\n" +
                 "Talks " + nativeLanguage;
-        for (Language e: otherLanguages) {
+        for (Language e : otherLanguages) {
             start.concat(", " + e.toString());
         }
         start.concat(groupId == -1 ? "\nStill has no group" : "\nWorks in group " + groupId);

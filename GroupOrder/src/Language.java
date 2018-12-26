@@ -16,4 +16,9 @@ public enum Language {
     public String getShortValue() {
         return shortValue;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + " -> " + this.getShortValue();
+    }
 }
