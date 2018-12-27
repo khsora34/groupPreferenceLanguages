@@ -2,6 +2,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ConnectionManager {
 
@@ -16,13 +17,8 @@ public class ConnectionManager {
 
         conn = DriverManager.getConnection(url);
         if (conn != null) {
-            DatabaseMetaData meta = conn.getMetaData();
-            System.out.println("The driver name is " + meta.getDriverName());
-            System.out.println("A new database has been created.");
-
             this.autoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
-
         }
 
         return conn;
@@ -39,10 +35,19 @@ public class ConnectionManager {
 
         String groupQuery = "CREATE TABLE IF NOT EXISTS groupRoom (" +
                 "id INTEGER PRIMARY KEY, " +
-                "roomId TEXT NOT NULL" +
+                "roomId TEXT NOT NULL, " +
+                "leaders INTEGER, " +
+                "participants INTEGER " +
                 ");";
 
-        String languagesQuery = "CREATE TABLE IF NOT EXISTS spokenLanguages (" +
+        String languagesGroupQuery = "CREATE TABLE IF NOT EXISTS groupSpokenLanguages (" +
+                "groupId INTEGER NOT NULL, " +
+                "language TEXT NOT NULL, " +
+                "PRIMARY KEY (groupId, language), " +
+                "FOREIGN KEY (groupId) REFERENCES groupRoom(id) ON DELETE RESTRICT ON UPDATE CASCADE " +
+                ");";
+
+        String languagesPilgrimQuery = "CREATE TABLE IF NOT EXISTS pilgrimSpokenLanguages (" +
                 "pilgrimId INTEGER NOT NULL, " +
                 "language TEXT NOT NULL, " +
                 "PRIMARY KEY (pilgrimId, language), " +
@@ -56,7 +61,10 @@ public class ConnectionManager {
         st.execute(groupQuery);
 
         st = conn.createStatement();
-        st.execute(languagesQuery);
+        st.execute(languagesPilgrimQuery);
+
+        st = conn.createStatement();
+        st.execute(languagesGroupQuery);
 
         conn.commit();
 
@@ -77,6 +85,38 @@ public class ConnectionManager {
             lastGroupId = id > lastGroupId ? id : lastGroupId;
 
             map.put(id, new Group(id, name));
+        }
+
+        query = "SELECT * FROM groupSpokenLanguages";
+
+        prepSt = conn.prepareStatement(query);
+
+        rs = prepSt.executeQuery();
+
+        while (rs.next()) {
+            int id = rs.getInt("pilgrimId");
+            Group group = map.get(id);
+
+            if (group == null) {
+                System.out.println("THERE IS A PILGRIM IN SPOKENLANGUAGES THAT DOES NOT EXIST. ID = " + id);
+                continue;
+            }
+
+            String languageString = rs.getString("language");
+
+            try {
+                Language language = Language.valueOf(languageString);
+                if (language != null) {
+                    Set<Language> allLanguages = group.getAllLanguages();
+                    allLanguages.add(language);
+                    group.setAllLanguages(allLanguages);
+                }
+
+            } catch (IllegalArgumentException e) {
+                System.out.println("THE PILGRIM WITH ID " + id + " HAS A PROBLEM WITH HIS NATIVE LANGUAGE " + languageString);
+            }
+
+            map.put(id, group);
         }
 
         return map;
@@ -108,7 +148,7 @@ public class ConnectionManager {
             map.put(id, newPilgrim);
         }
 
-        query = "SELECT * FROM spokenLanguages";
+        query = "SELECT * FROM pilgrimSpokenLanguages";
 
         prepSt = conn.prepareStatement(query);
 
@@ -128,9 +168,9 @@ public class ConnectionManager {
             try {
                 Language language = Language.valueOf(languageString);
                 if (language != null) {
-                    List<Language> otherLanguage = pilgrim.getOtherLanguages();
+                    Set<Language> otherLanguage = pilgrim.getOtherLanguages();
                     otherLanguage.add(language);
-                    pilgrim.setOtherLanguage(otherLanguage);
+                    pilgrim.setOtherLanguages(otherLanguage);
                 }
 
             } catch (IllegalArgumentException e) {
@@ -146,7 +186,7 @@ public class ConnectionManager {
 
     private void insertPilgrim(Pilgrim p) throws SQLException {
         String pilgrimQuery = "INSERT INTO pilgrim (id, name, nativeLanguage, isLeader, groupId) VALUES (?,?,?,?,?)";
-        String languagesQuery = "INSERT INTO spokenLanguages (pilgrimId, language) VALUES (?,?)";
+        String languagesQuery = "INSERT INTO pilgrimSpokenLanguages (pilgrimId, language) VALUES (?,?)";
 
         PreparedStatement pilgrimSt = conn.prepareStatement(pilgrimQuery);
         PreparedStatement langSt = conn.prepareStatement(languagesQuery);
@@ -167,8 +207,8 @@ public class ConnectionManager {
 
     private void updatePilgrim(Pilgrim p) throws SQLException {
         String pilgrimQuery = "UPDATE pilgrim SET name = ?, nativeLanguage = ?, groupId = ? WHERE id = ?";
-        String languagesQuery = "INSERT INTO spokenLanguages (pilgrimId, language) VALUES (?,?)";
-        String deleteQuery = "DELETE FROM spokenLanguages WHERE pilgrimId = ?";
+        String languagesQuery = "INSERT INTO pilgrimSpokenLanguages (pilgrimId, language) VALUES (?,?)";
+        String deleteQuery = "DELETE FROM pilgrimSpokenLanguages WHERE pilgrimId = ?";
 
         PreparedStatement pilgrimSt = conn.prepareStatement(pilgrimQuery);
         PreparedStatement langSt = conn.prepareStatement(languagesQuery);
@@ -201,23 +241,50 @@ public class ConnectionManager {
     }
 
     private void insertGroup(Group group) throws SQLException {
-        String query = "INSERT INTO groupRoom (id, roomId) VALUES (?,?);";
+        String query = "INSERT INTO groupRoom (id, roomId, leaders, participants) VALUES (?,?,?,?);";
+        String languagesQuery = "INSERT INTO groupSpokenLanguages (groupId, language) VALUES (?,?)";
+
         PreparedStatement prepSt = conn.prepareStatement(query);
+        PreparedStatement langSt = conn.prepareStatement(languagesQuery);
 
         prepSt.setInt(1, group.getId());
         prepSt.setString(2, group.getRoomName());
+        prepSt.setInt(3, group.getNumberOfLeaders());
+        prepSt.setInt(4, group.getNumberOfParticipants());
 
         prepSt.executeUpdate();
+
+        langSt.setInt(1, group.getId());
+        for (Language l : group.getAllLanguages()) {
+            langSt.setString(2, l.getShortValue());
+            langSt.executeUpdate();
+        }
     }
 
     private void updateGroup(Group group) throws SQLException {
-        String query = "UPDATE groupRoom SET roomId = ? WHERE id = ?";
+        String query = "UPDATE groupRoom SET roomId = ?, leaders = ?, participants = ? WHERE id = ?";
+        String languagesQuery = "INSERT INTO groupSpokenLanguages (groupId, language) VALUES (?,?)";
+        String deleteQuery = "DELETE FROM groupSpokenLanguages WHERE groupId = ?";
+
         PreparedStatement prepSt = conn.prepareStatement(query);
+        PreparedStatement langSt = conn.prepareStatement(languagesQuery);
+        PreparedStatement deleteSt = conn.prepareStatement(deleteQuery);
 
         prepSt.setString(1, group.getRoomName());
         prepSt.setInt(2, group.getId());
+        prepSt.setInt(3, group.getNumberOfLeaders());
+        prepSt.setInt(4, group.getNumberOfParticipants());
 
         prepSt.executeUpdate();
+
+        deleteSt.setInt(1, group.getId());
+        deleteSt.executeUpdate();
+
+        langSt.setInt(1, group.getId());
+        for (Language l : group.getAllLanguages()) {
+            langSt.setString(2, l.getShortValue());
+            langSt.executeUpdate();
+        }
     }
 
     public void saveGroup(Group group) throws SQLException {

@@ -47,6 +47,30 @@ public class MixAlgorithm {
                     }
                 }
 
+                if (indexWithMinLeaders != -1) {
+                    addPilgrimToGroup(actualPilgrim, groups[indexWithMinLeaders]);
+                    continue;
+                }
+
+                for (int i = 0; !zeroConditionMet && i < groups.length; i++) {
+                    if (groups[i].getNumberOfParticipants() < minLeaders && canTalkWithNativeLanguageInGroup(groups[i], actualPilgrim.getNativeLanguage())) {
+                        minLeaders = groups[i].getNumberOfParticipants();
+                        indexWithMinLeaders = i;
+                    }
+                }
+
+                if (indexWithMinLeaders != -1) {
+                    addPilgrimToGroup(actualPilgrim, groups[indexWithMinLeaders]);
+                    continue;
+                }
+
+                for (int i = 0; !zeroConditionMet && i < groups.length; i++) {
+                    if (groups[i].getNumberOfParticipants() < minLeaders) {
+                        minLeaders = groups[i].getNumberOfParticipants();
+                        indexWithMinLeaders = i;
+                    }
+                }
+
                 addPilgrimToGroup(actualPilgrim, groups[indexWithMinLeaders]);
 
             } else {
@@ -112,7 +136,9 @@ public class MixAlgorithm {
         languages.add(pilgrim.getNativeLanguage());
         group.setAllLanguages(languages);
         group.setNumberOfParticipants(group.getNumberOfParticipants() + 1);
-        group.setNumberOfLeaders(group.getNumberOfLeaders() + 1);
+        if (pilgrim.isLeader()) {
+            group.setNumberOfLeaders(group.getNumberOfLeaders() + 1);
+        }
         groupsMap.put(group.getId(), group);
     }
 

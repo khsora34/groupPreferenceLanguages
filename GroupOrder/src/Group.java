@@ -67,6 +67,18 @@ public class Group {
 
     @Override
     public String toString() {
-        return "This room is number " + id + " with name " + roomName;
+        String start = "Room with id " + id + " named " + roomName + ".\n" +
+                "On the moment, it has " + numberOfParticipants + " participants, where " + numberOfLeaders + " of them are leaders.\n";
+
+        if (!allLanguages.isEmpty()) {
+            start = start.concat("The languages spoken in this room are ");
+        }
+
+
+        for (Language l: allLanguages) {
+            start = start.concat(l.name() + ", ");
+        }
+
+        return start;
     }
 }

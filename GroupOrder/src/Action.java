@@ -11,7 +11,7 @@ public enum Action {
         Action[] actions = Action.values();
 
         for (int i = 0; res == null && i < actions.length; i++) {
-            if (actions[i].ordinal() == number) {
+            if (actions[i].ordinal() + 1 == number) {
                 res = actions[i];
             }
         }

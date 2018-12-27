@@ -9,30 +9,34 @@ public class MainInterface {
     private Map<Integer, Pilgrim> pilgrims;
     private Map<Integer, Group> groups;
 
-    private boolean groupsNeedSaving = false;
-    private boolean pilgrimsNeedSaving = false;
+    private boolean needsSaving = false;
 
     public MainInterface() {
         connection = new ConnectionManager();
         input = new StandardInput();
     }
 
-    private void launchMainInterface() throws SQLException {
-        System.out.println("WELCOME TO GROUP ORDER.");
-        System.out.println("LAUNCHING DATABASE...");
+    public void launchMainInterface() throws SQLException {
+        System.out.println("WELCOME TO GROUP ORDER.\n");
+        System.out.println("LAUNCHING DATABASE...\n");
 
-        connection.connectDb();
+        if (!connection.connectDb()) {
+            System.out.println("UNABLE TO CONNECT TO DATABASE.");
+            System.out.println("PRESS ENTER TO EXIT THE PROGRAM..");
+            input.nextLine();
+            System.exit(-1);
+        }
 
-        System.out.println("SUCCESFULLY CONNECTED.");
+        System.out.println("SUCCESFULLY CONNECTED.\n");
 
         System.out.println("LOADING PILGRIMS INTO PROGRAM.");
 
         pilgrims = connection.loadPilgrimResources();
 
         if (pilgrims.values().isEmpty()) {
-            System.out.println("STILL NO PILGRIMS IN THE DATABASE.");
+            System.out.println("STILL NO PILGRIMS IN THE DATABASE.\n");
         } else {
-            System.out.println("PILGRIMS LOADED SUCCESFULLY.");
+            System.out.println("PILGRIMS LOADED SUCCESFULLY.\n");
         }
 
         System.out.println("LOADING AVAILABLE ROOMS.");
@@ -40,9 +44,9 @@ public class MainInterface {
         groups = connection.loadGroupsResources();
 
         if (groups.values().isEmpty()) {
-            System.out.println("STILL NO GROUPS IN THE DATABASE.");
+            System.out.println("STILL NO GROUPS IN THE DATABASE.\n");
         } else {
-            System.out.println("ROOMS LOADED SUCCESFULLY.");
+            System.out.println("ROOMS LOADED SUCCESFULLY.\n");
         }
 
         System.out.println("PROGRAM STARTED SUCCESFULLY.");
@@ -50,14 +54,19 @@ public class MainInterface {
         connection.disconnect();
     }
 
-
-    private void mainMenu() throws SQLException {
-        System.out.println("CHOOSE AN OPTION");
+    public void mainMenu() throws SQLException {
+        System.out.println("\nACTIONS AVAILABLE: \n");
         for (Action a : Action.values()) {
             System.out.println(a.toString());
         }
 
-        switch (Action.valueOf(input.readNumber())) {
+        System.out.print(" \nCHOOSE AN ACTION: ");
+
+        int option = input.readNumber();
+
+        System.out.print(" \n---------------------------------------------------------------------------------------------------\n");
+
+        switch (Action.valueOf(option)) {
             case ENTER_PILGRIM:
                 addPilgrim();
                 break;
@@ -82,13 +91,11 @@ public class MainInterface {
             case EXIT:
                 endSession();
                 break;
-
-
         }
     }
 
     private boolean askForSaving() {
-        if (pilgrimsNeedSaving || groupsNeedSaving) {
+        if (needsSaving) {
             System.out.println("DO YOU WANT TO SAVE YOUR CHANGES BEFORE RELOADING? NO -> -1 | OTHERWISE YES");
             if (-1 != input.readNumber()) {
                 try {
@@ -164,6 +171,8 @@ public class MainInterface {
         p.setOtherLanguages(otherLanguages);
 
         pilgrims.put(id, p);
+
+        needsSaving = true;
     }
 
     private void addGroup() {
@@ -182,17 +191,25 @@ public class MainInterface {
         Group g = new Group(id, name);
 
         groups.put(id, g);
+
+        needsSaving = true;
     }
 
     private void showPilgrims() {
+        System.out.println("HERE IS THE PILGRIM'S LIST:\n ");
+
         for (Pilgrim p: pilgrims.values()) {
             System.out.println(p.toString());
+            System.out.println("----------------------");
         }
     }
 
     private void showGroups() {
+        System.out.println("HERE IS THE GROUP'S LIST:\n ");
+
         for (Group g: groups.values()) {
             System.out.println(g.toString());
+            System.out.println("----------------------");
         }
     }
 
@@ -214,16 +231,29 @@ public class MainInterface {
         alg.startAlgorithm(useFilter, useShuffle);
 
         System.out.println("ASSIGNMENT SUCCESFULLY ENDED.");
+
+        needsSaving = true;
     }
 
     private void saveChanges() throws SQLException {
+        if (!connection.connectDb()) {
+            System.out.println("UNABLE TO CONNECT TO DATABASE.");
+            System.out.println("PRESS ENTER TO EXIT THE PROGRAM..");
+            input.nextLine();
+            System.exit(-1);
+        }
+
         connection.savePilgrims(pilgrims.values().toArray(new Pilgrim[0]));
 
         for (Group g: groups.values()) {
             connection.saveGroup(g);
         }
 
-        System.out.println("SAVED INFO SUCCESSFULLY.");
+        System.out.println("SAVED INFO SUCCESSFULLY.\n");
+
+        needsSaving = false;
+
+        connection.disconnect();
     }
 
     private void reloadDatabase() throws SQLException {
@@ -233,6 +263,13 @@ public class MainInterface {
         }
 
         System.out.println("LOADING PILGRIMS INTO PROGRAM.");
+
+        if (!connection.connectDb()) {
+            System.out.println("UNABLE TO CONNECT TO DATABASE.");
+            System.out.println("PRESS ENTER TO EXIT THE PROGRAM..");
+            input.nextLine();
+            System.exit(-1);
+        }
 
         pilgrims = connection.loadPilgrimResources();
 
@@ -254,6 +291,7 @@ public class MainInterface {
 
         System.out.println("\nPROGRAM RELOADED SUCCESSFULLY.\n");
 
+        connection.disconnect();
     }
 
     private void endSession() throws SQLException {
@@ -279,6 +317,4 @@ public class MainInterface {
             e.printStackTrace();
         }
     }
-
-
 }

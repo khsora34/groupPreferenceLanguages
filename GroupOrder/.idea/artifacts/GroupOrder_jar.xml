@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="GroupOrder:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/GroupOrder_jar</output-path>
+    <root id="archive" name="GroupOrder.jar">
+      <element id="module-output" name="GroupOrder" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/bin/sqlite-jdbc-3.23.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
