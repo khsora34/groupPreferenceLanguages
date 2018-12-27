@@ -1,12 +1,14 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Pilgrim {
 
     private int id;
     private String name;
     private Language nativeLanguage;
-    private List<Language> otherLanguages;
+    private Set<Language> otherLanguages;
     private int groupId;
     private boolean isLeader;
 
@@ -14,7 +16,7 @@ public class Pilgrim {
         this.id = id;
         this.name = name;
         this.nativeLanguage = nativeLanguage;
-        otherLanguages = new ArrayList<>();
+        otherLanguages = new HashSet<>();
         groupId = -1;
         this.isLeader = isLeader;
     }
@@ -23,7 +25,7 @@ public class Pilgrim {
         this.id = id;
         this.name = name;
         this.nativeLanguage = nativeLanguage;
-        otherLanguages = new ArrayList<>();
+        otherLanguages = new HashSet<>();
         this.groupId = groupId;
         this.isLeader = isLeader;
     }
@@ -53,11 +55,11 @@ public class Pilgrim {
         this.nativeLanguage = nativeLanguage;
     }
 
-    public List<Language> getOtherLanguages() {
+    public Set<Language> getOtherLanguages() {
         return otherLanguages;
     }
 
-    public void setOtherLanguage(List<Language> otherLanguages) {
+    public void setOtherLanguages(Set<Language> otherLanguages) {
         this.otherLanguages = otherLanguages;
     }
 

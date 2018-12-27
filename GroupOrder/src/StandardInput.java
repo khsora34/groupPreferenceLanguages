@@ -18,7 +18,10 @@ public class StandardInput {
         boolean already = false;
         do {
             if (already) {
-                System.out.print("TRY AGAIN:");
+                System.out.print("\nTRY AGAIN:");
+            } else {
+                System.out.print("\nENTER A NUMBER:");
+                already = true;
             }
             entrada = keyboard.next();
         } while (!entrada.matches("\\d+") || Integer.valueOf(entrada) == 0);
@@ -31,7 +34,10 @@ public class StandardInput {
         boolean already = false;
         do {
             if (already) {
-                System.out.print("TRY AGAIN:");
+                System.out.print("\nTRY AGAIN:");
+            } else {
+                System.out.print("\nENTER A CHARACTER:");
+                already = true;
             }
             entrada = keyboard.next();
         } while (entrada.length() > 1);
@@ -39,6 +45,7 @@ public class StandardInput {
     }
 
     public String readString() {
+        System.out.print("ENTER ANY TEXT:");
         keyboard = new Scanner(System.in);
         return keyboard.nextLine();
     }

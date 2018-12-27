@@ -1,23 +1,23 @@
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MainInterface {
 
     private ConnectionManager connection;
     private StandardInput input;
 
-    private boolean needsSaving = false;
     private Map<Integer, Pilgrim> pilgrims;
-    private Map<Integer, Group> rooms;
+    private Map<Integer, Group> groups;
+
+    private boolean groupsNeedSaving = false;
+    private boolean pilgrimsNeedSaving = false;
 
     public MainInterface() {
         connection = new ConnectionManager();
         input = new StandardInput();
     }
 
-    private void start() throws SQLException {
+    private void launchMainInterface() throws SQLException {
         System.out.println("WELCOME TO GROUP ORDER.");
         System.out.println("LAUNCHING DATABASE...");
 
@@ -29,13 +29,21 @@ public class MainInterface {
 
         pilgrims = connection.loadPilgrimResources();
 
-        System.out.println("PILGRIMS LOADED SUCCESFULLY.");
+        if (pilgrims.values().isEmpty()) {
+            System.out.println("STILL NO PILGRIMS IN THE DATABASE.");
+        } else {
+            System.out.println("PILGRIMS LOADED SUCCESFULLY.");
+        }
 
         System.out.println("LOADING AVAILABLE ROOMS.");
 
-        rooms = connection.loadGroupsResources();
+        groups = connection.loadGroupsResources();
 
-        System.out.println("ROOMS LOADED SUCCESFULLY.");
+        if (groups.values().isEmpty()) {
+            System.out.println("STILL NO GROUPS IN THE DATABASE.");
+        } else {
+            System.out.println("ROOMS LOADED SUCCESFULLY.");
+        }
 
         System.out.println("PROGRAM STARTED SUCCESFULLY.");
 
@@ -43,32 +51,72 @@ public class MainInterface {
     }
 
 
-    private void mainMenu() {
-        System.out.println("WHAT DO YOU WANT TO DO?");
+    private void mainMenu() throws SQLException {
+        System.out.println("CHOOSE AN OPTION");
         for (Action a : Action.values()) {
             System.out.println(a.toString());
         }
 
-        switch (input.readNumber()) {
-            case 1:
+        switch (Action.valueOf(input.readNumber())) {
+            case ENTER_PILGRIM:
+                addPilgrim();
+                break;
+            case ENTER_GROUP:
+                addGroup();
+                break;
+            case SHOW_AVAILABLE_PILGRIMS:
+                showPilgrims();
+                break;
+            case SHOW_AVAILABLE_GROUP:
+                showGroups();
+                break;
+            case MIX_GROUP:
+                mixAlgorithm();
+                break;
+            case SAVE_CHANGES:
+                saveChanges();
+                break;
+            case RELOAD_DATABASE:
+                reloadDatabase();
+                break;
+            case EXIT:
+                endSession();
+                break;
 
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
 
         }
     }
 
+    private boolean askForSaving() {
+        if (pilgrimsNeedSaving || groupsNeedSaving) {
+            System.out.println("DO YOU WANT TO SAVE YOUR CHANGES BEFORE RELOADING? NO -> -1 | OTHERWISE YES");
+            if (-1 != input.readNumber()) {
+                try {
+                    saveChanges();
+                } catch (SQLException e) {
+                    System.out.println("UNABLE TO SAVE DATA ON DATABASE, ERROR OUTPUT:");
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private void addPilgrim() {
-        int id = connection.getLastPilgrimId();
+        System.out.println("IF YOU WANT TO UPDATE A PILGRIM, ENTER THE ID, ELSE -1: ");
+
+        int id = input.readNumber();
+
+        if (id == -1) {
+            id = connection.getLastPilgrimId();
+        }
 
         System.out.println("ENTER PILGRIM NAME: ");
 
         String name = input.readString();
 
-        System.out.println("IS THE PILGRIM A LEADER? (1 IF YES, OTHERWISE NO): ");
+        System.out.println("IS THE PILGRIM A LEADER? Yes -> 1, OTHERWISE NO): ");
 
         boolean isLeader = input.readNumber() == 1;
 
@@ -91,7 +139,7 @@ public class MainInterface {
 
         Pilgrim p = new Pilgrim(id, name, language, isLeader);
 
-        List<Language> otherLanguages = new ArrayList<>();
+        Set<Language> otherLanguages = new HashSet<>();
 
         String inputString = "";
 
@@ -100,81 +148,136 @@ public class MainInterface {
 
             inputString = input.readString();
 
-            if (!inputString.equals("0")) {
+            if (!"0".equals(inputString)) {
                 Language newLanguage = Utils.getLanguage(inputString);
 
                 if (newLanguage == null) {
                     System.out.println("LANGUAGE NOT SUPPORTED, TRY AGAIN. ");
                 } else {
+                    otherLanguages.add(newLanguage);
                     System.out.println("ADDED " + newLanguage.name() + " TO THIS PILGRIM.");
                 }
             }
 
-        } while (!inputString.equals("0"));
+        } while (!"0".equals(inputString));
 
-        p.setOtherLanguage(otherLanguages);
+        p.setOtherLanguages(otherLanguages);
 
         pilgrims.put(id, p);
     }
 
     private void addGroup() {
-        int id = connection.getLastPilgrimId();
+        System.out.println("IF YOU WANT TO UPDATE A GROUP, ENTER THE ID, ELSE -1: ");
 
-        System.out.println("ENTER PILGRIM NAME: ");
+        int id = input.readNumber();
+
+        if (id == -1) {
+            id = connection.getLastPilgrimId();
+        }
+
+        System.out.println("ENTER GROUP's ROOM NAME: ");
 
         String name = input.readString();
 
-        System.out.println("IS THE PILGRIM A LEADER? (1 IF YES, OTHERWISE NO): ");
+        Group g = new Group(id, name);
 
-        boolean isLeader = input.readNumber() == 1;
+        groups.put(id, g);
+    }
 
-        System.out.println("AVAILABLE LANGUAGES: ");
+    private void showPilgrims() {
+        for (Pilgrim p: pilgrims.values()) {
+            System.out.println(p.toString());
+        }
+    }
 
-        for (Language l : Language.values()) {
-            System.out.print(l.toString() + ", ");
+    private void showGroups() {
+        for (Group g: groups.values()) {
+            System.out.println(g.toString());
+        }
+    }
+
+    private void mixAlgorithm() {
+        MixAlgorithm alg = new MixAlgorithm(pilgrims, groups);
+
+        System.out.println("THE ALGORITHM IS LOADING...");
+
+        System.out.println("WOULD YOU LIKE TO START FROM ZERO OR CONTINUE WITH ACTUAL SELECTION? -1 -> ZERO | OTHERWISE -> ACTUAL");
+        System.out.println("IF YOU START FROM ZERO, YOUR LAST SELECTION WILL BE DELETED.");
+
+        boolean useFilter = -1 != input.readNumber();
+
+        System.out.println("WOULD YOU LIKE TO SHUFFLE THE PILGRIMS BEFORE MIXING? 1 -> YES | OTHERWISE -> NO");
+        System.out.println("IF SHUFFLING IS ENABLED, THE PROGRAM MAY TAKE MORE TIME TO ASSIGN GROUPS.");
+
+        boolean useShuffle = -1 != input.readNumber();
+
+        alg.startAlgorithm(useFilter, useShuffle);
+
+        System.out.println("ASSIGNMENT SUCCESFULLY ENDED.");
+    }
+
+    private void saveChanges() throws SQLException {
+        connection.savePilgrims(pilgrims.values().toArray(new Pilgrim[0]));
+
+        for (Group g: groups.values()) {
+            connection.saveGroup(g);
         }
 
-        Language language = null;
+        System.out.println("SAVED INFO SUCCESSFULLY.");
+    }
 
-        do {
-            System.out.println("ENTER THE PILGRIM'S NATIVE LANGUAGE: ");
-            language = Utils.getLanguage(input.readString());
-            if (language == null) {
-                System.out.println("LANGUAGE NOT SUPPORTED, TRY AGAIN. ");
-            }
+    private void reloadDatabase() throws SQLException {
+        if (!askForSaving()) {
+            System.out.println("\nOPERATION CANCELED");
+            return;
+        }
 
-        } while (language == null);
+        System.out.println("LOADING PILGRIMS INTO PROGRAM.");
 
-        Pilgrim p = new Pilgrim(id, name, language, isLeader);
+        pilgrims = connection.loadPilgrimResources();
 
-        List<Language> otherLanguages = new ArrayList<>();
+        if (pilgrims.values().isEmpty()) {
+            System.out.println("STILL NO PILGRIMS IN THE DATABASE.");
+        } else {
+            System.out.println("PILGRIMS LOADED SUCCESFULLY.");
+        }
 
-        String inputString = "";
+        System.out.println("LOADING AVAILABLE ROOMS.");
 
-        do {
-            System.out.println("ENTER ANY OTHER LANGUAGE THE PILGRIM KNOWS (TYPE '0' TO END): ");
+        groups = connection.loadGroupsResources();
 
-            inputString = input.readString();
+        if (groups.values().isEmpty()) {
+            System.out.println("STILL NO GROUPS IN THE DATABASE.");
+        } else {
+            System.out.println("ROOMS LOADED SUCCESFULLY.");
+        }
 
-            if (!inputString.equals("0")) {
-                Language newLanguage = Utils.getLanguage(inputString);
+        System.out.println("\nPROGRAM RELOADED SUCCESSFULLY.\n");
 
-                if (newLanguage == null) {
-                    System.out.println("LANGUAGE NOT SUPPORTED, TRY AGAIN. ");
-                } else {
-                    System.out.println("ADDED " + newLanguage.name() + " TO THIS PILGRIM.");
-                }
-            }
+    }
 
-        } while (!inputString.equals("0"));
+    private void endSession() throws SQLException {
+        if (!askForSaving()) {
+            System.out.println("\nOPERATION CANCELED");
+            return;
+        }
 
-        p.setOtherLanguage(otherLanguages);
+        System.out.println("\nSHUTTING DOWN THE DATABASE.");
 
-        pilgrims.put(id, p);
+        connection.disconnect();
+
+        System.out.println("SHUTDOWN COMPLETE, THANKS FOR USING OUR SOFTWARE!");
+        System.out.println("PRESS ENTER TO EXIT THE PROGRAM.");
+        input.nextLine();
+        System.exit(0);
     }
 
     public static void main(String[] args) {
-        new MainInterface().mainMenu();
+        try {
+            new MainInterface().mainMenu();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
