@@ -84,7 +84,7 @@ public class Pilgrim {
         String start = "Pilgrim with id " + id + ", named " + name + ".\n" +
                 "Talks " + nativeLanguage;
         for (Language e : otherLanguages) {
-            start.concat(", " + e.toString());
+            start = start.concat(", " + e.toString());
         }
         start = start.concat(groupId == -1 ? "\nStill has no group." : "\nWorks in group " + groupId + ".");
         start = start.concat("\nThis pilgrim is " + (isLeader ? "" : "not ") + "a leader.");

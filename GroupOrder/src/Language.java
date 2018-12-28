@@ -5,7 +5,10 @@ public enum Language {
     POLISH ("pol"),
     UKRANIAN ("ukr"),
     CROATIAN ("cro"),
-    FRENCH ("fr");
+    FRENCH ("fr"),
+    LATIN ("lat"),
+    PORTUGUESE ("port"),
+    RUSSIAN ("russ");
 
     private final String shortValue;
 

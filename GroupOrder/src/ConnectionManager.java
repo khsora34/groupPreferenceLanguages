@@ -81,11 +81,16 @@ public class ConnectionManager {
         while (rs.next()) {
             int id = rs.getInt("id");
             String name = rs.getString("roomId");
+            int leaders = rs.getInt("leaders");
+            int participants = rs.getInt("participants");
 
             lastGroupId = id > lastGroupId ? id : lastGroupId;
 
-            map.put(id, new Group(id, name));
+            map.put(id, new Group(id, name, leaders, participants));
         }
+
+        lastGroupId++;
+
 
         query = "SELECT * FROM groupSpokenLanguages";
 
@@ -94,11 +99,11 @@ public class ConnectionManager {
         rs = prepSt.executeQuery();
 
         while (rs.next()) {
-            int id = rs.getInt("pilgrimId");
+            int id = rs.getInt("groupId");
             Group group = map.get(id);
 
             if (group == null) {
-                System.out.println("THERE IS A PILGRIM IN SPOKENLANGUAGES THAT DOES NOT EXIST. ID = " + id);
+                System.out.println("THERE IS A GROUP IN SPOKENLANGUAGES THAT DOES NOT EXIST. ID = " + id);
                 continue;
             }
 
@@ -113,7 +118,7 @@ public class ConnectionManager {
                 }
 
             } catch (IllegalArgumentException e) {
-                System.out.println("THE PILGRIM WITH ID " + id + " HAS A PROBLEM WITH HIS NATIVE LANGUAGE " + languageString);
+                System.out.println("THE GROUP WITH ID " + id + " HAS A PROBLEM WITH HIS NATIVE LANGUAGE " + languageString);
             }
 
             map.put(id, group);
@@ -123,7 +128,7 @@ public class ConnectionManager {
     }
 
     public Map<Integer, Pilgrim> loadPilgrimResources() throws SQLException {
-        String query = "SELECT id, name, nativeLanguage, isLeader FROM pilgrim";
+        String query = "SELECT id, name, nativeLanguage, isLeader, groupId FROM pilgrim";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
         ResultSet rs = prepSt.executeQuery();
@@ -143,10 +148,16 @@ public class ConnectionManager {
                 System.out.println("THE PILGRIM WITH ID " + id + " HAS A PROBLEM WITH HIS NATIVE LANGUAGE " + languageString);
             }
 
+            int groupId = rs.getInt("groupId");
+
             Pilgrim newPilgrim = new Pilgrim(id, name, language, isLeader);
+
+            newPilgrim.setGroupId(groupId);
 
             map.put(id, newPilgrim);
         }
+
+        lastPilgrimId++;
 
         query = "SELECT * FROM pilgrimSpokenLanguages";
 
@@ -232,7 +243,7 @@ public class ConnectionManager {
 
     public void savePilgrims(Pilgrim[] pilgrims) throws SQLException {
         for (Pilgrim p : pilgrims) {
-            if (p.getId() <= lastPilgrimId) {
+            if (p.getId() < lastPilgrimId) {
                 updatePilgrim(p);
             } else {
                 insertPilgrim(p);
@@ -288,7 +299,7 @@ public class ConnectionManager {
     }
 
     public void saveGroup(Group group) throws SQLException {
-        if (group.getId() <= lastGroupId) {
+        if (group.getId() < lastGroupId) {
             updateGroup(group);
         } else {
             insertGroup(group);
@@ -328,9 +339,7 @@ public class ConnectionManager {
     }
 
     public int getLastPilgrimId() {
-        int ret = lastPilgrimId;
-        lastPilgrimId++;
-        return ret;
+        return lastPilgrimId;
     }
 
     public void setLastPilgrimId(int lastPilgrimId) {
@@ -338,9 +347,7 @@ public class ConnectionManager {
     }
 
     public int getLastGroupId() {
-        int ret = lastGroupId;
-        lastGroupId++;
-        return ret;
+        return lastGroupId;
     }
 
     public void setLastGroupId(int lastGroupId) {

@@ -24,7 +24,7 @@ public class StandardInput {
                 already = true;
             }
             entrada = keyboard.next();
-        } while (!entrada.matches("\\d+") || Integer.valueOf(entrada) == 0);
+        } while (!entrada.matches("-?\\d+") || Integer.valueOf(entrada) == 0);
         return Integer.valueOf(entrada);
     }
 

@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -10,6 +13,9 @@ public class MainInterface {
     private Map<Integer, Group> groups;
 
     private boolean needsSaving = false;
+
+    private int newIdForPilgrim = 1;
+    private int newIdForGroup = 1;
 
     public MainInterface() {
         connection = new ConnectionManager();
@@ -51,6 +57,9 @@ public class MainInterface {
 
         System.out.println("PROGRAM STARTED SUCCESFULLY.");
 
+        newIdForPilgrim = connection.getLastPilgrimId();
+        newIdForGroup = connection.getLastGroupId();
+
         connection.disconnect();
     }
 
@@ -66,7 +75,14 @@ public class MainInterface {
 
         System.out.print(" \n---------------------------------------------------------------------------------------------------\n");
 
-        switch (Action.valueOf(option)) {
+        Action action = Action.valueOf(option);
+
+        if (action == null) {
+            System.out.println("OPTION NOT SUPPORTED. PLEASE, TRY AGAIN.");
+            return;
+        }
+
+        switch (action) {
             case ENTER_PILGRIM:
                 addPilgrim();
                 break;
@@ -81,6 +97,9 @@ public class MainInterface {
                 break;
             case MIX_GROUP:
                 mixAlgorithm();
+                break;
+            case SHOW_ACTUAL_GROUPS:
+                showMixedGroups();
                 break;
             case SAVE_CHANGES:
                 saveChanges();
@@ -116,7 +135,8 @@ public class MainInterface {
         int id = input.readNumber();
 
         if (id == -1) {
-            id = connection.getLastPilgrimId();
+            id = newIdForPilgrim;
+            newIdForPilgrim++;
         }
 
         System.out.println("ENTER PILGRIM NAME: ");
@@ -181,7 +201,8 @@ public class MainInterface {
         int id = input.readNumber();
 
         if (id == -1) {
-            id = connection.getLastPilgrimId();
+            id = newIdForGroup;
+            newIdForGroup++;
         }
 
         System.out.println("ENTER GROUP's ROOM NAME: ");
@@ -196,7 +217,12 @@ public class MainInterface {
     }
 
     private void showPilgrims() {
-        System.out.println("HERE IS THE PILGRIM'S LIST:\n ");
+        if (pilgrims.values().isEmpty()) {
+            System.out.println("THERE ARE STILL NO PILGRIMS LOADED.\n");
+        } else {
+            System.out.println("HERE IS THE PILGRIM'S LIST:\n ");
+        }
+
 
         for (Pilgrim p: pilgrims.values()) {
             System.out.println(p.toString());
@@ -205,7 +231,11 @@ public class MainInterface {
     }
 
     private void showGroups() {
-        System.out.println("HERE IS THE GROUP'S LIST:\n ");
+        if (groups.values().isEmpty()) {
+            System.out.println("THERE ARE STILL NO GROUPS LOADED.|n");
+        } else {
+            System.out.println("HERE IS THE GROUP'S LIST:\n ");
+        }
 
         for (Group g: groups.values()) {
             System.out.println(g.toString());
@@ -214,11 +244,16 @@ public class MainInterface {
     }
 
     private void mixAlgorithm() {
+        if (pilgrims.values().isEmpty() || groups.values().isEmpty()) {
+            System.out.println("THERE AREN'T ENOUGH PILGRIMS/GROUPS FOR STARTING TO MIX.");
+            return;
+        }
+
         MixAlgorithm alg = new MixAlgorithm(pilgrims, groups);
 
         System.out.println("THE ALGORITHM IS LOADING...");
 
-        System.out.println("WOULD YOU LIKE TO START FROM ZERO OR CONTINUE WITH ACTUAL SELECTION? -1 -> ZERO | OTHERWISE -> ACTUAL");
+        System.out.println("WOULD YOU LIKE TO START FROM ZERO OR CONTINUE WITH ACTUAL SELECTION? 1 -> NEW | OTHERWISE -> ACTUAL");
         System.out.println("IF YOU START FROM ZERO, YOUR LAST SELECTION WILL BE DELETED.");
 
         boolean useFilter = -1 != input.readNumber();
@@ -235,6 +270,42 @@ public class MainInterface {
         needsSaving = true;
     }
 
+    private void showMixedGroups() {
+        if (pilgrims.values().isEmpty() || groups.values().isEmpty()) {
+            System.out.println("THERE AREN'T ENOUGH PILGRIMS/GROUPS FOR STARTING TO MIX.");
+            return;
+        }
+
+        System.out.print("SHOWING THE ACTUAL LIST OF PILGRIMS: \n");
+
+        int groupsNumber = groups.values().size();
+
+        List<Pilgrim>[] pilgrimsGroups = new LinkedList[groupsNumber];
+
+        for (int i = 0; i < pilgrimsGroups.length; i++) {
+            pilgrimsGroups[i] = new LinkedList<>();
+        }
+
+        for (Pilgrim p: pilgrims.values()) {
+            if (p.getGroupId() == -1) {
+                continue;
+            }
+            pilgrimsGroups[p.getGroupId() - 1].add(p);
+        }
+
+        for (int i = 0; i < pilgrimsGroups.length; i++) {
+            System.out.println("GROUP NUMBER " + (i+1) + ": ");
+            for (Pilgrim p: pilgrimsGroups[i]) {
+                System.out.print(" - " + p.getName() + (p.isLeader()? ", is leader and" : ",") +  " speaks " + p.getNativeLanguage().name());
+
+                for(Language l: p.getOtherLanguages()) {
+                    System.out.print(", " + l.name());
+                }
+            }
+            System.out.println("\n------------------------------------\n");
+        }
+    }
+
     private void saveChanges() throws SQLException {
         if (!connection.connectDb()) {
             System.out.println("UNABLE TO CONNECT TO DATABASE.");
@@ -248,6 +319,9 @@ public class MainInterface {
         for (Group g: groups.values()) {
             connection.saveGroup(g);
         }
+
+        connection.setLastPilgrimId(newIdForPilgrim);
+        connection.setLastGroupId(newIdForGroup);
 
         System.out.println("SAVED INFO SUCCESSFULLY.\n");
 
@@ -289,6 +363,9 @@ public class MainInterface {
             System.out.println("ROOMS LOADED SUCCESFULLY.");
         }
 
+        newIdForPilgrim = connection.getLastPilgrimId();
+        newIdForGroup = connection.getLastGroupId();
+
         System.out.println("\nPROGRAM RELOADED SUCCESSFULLY.\n");
 
         connection.disconnect();
@@ -299,10 +376,6 @@ public class MainInterface {
             System.out.println("\nOPERATION CANCELED");
             return;
         }
-
-        System.out.println("\nSHUTTING DOWN THE DATABASE.");
-
-        connection.disconnect();
 
         System.out.println("SHUTDOWN COMPLETE, THANKS FOR USING OUR SOFTWARE!");
         System.out.println("PRESS ENTER TO EXIT THE PROGRAM.");
