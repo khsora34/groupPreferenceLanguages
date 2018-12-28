@@ -84,10 +84,16 @@ public class MainInterface {
 
         switch (action) {
             case ENTER_PILGRIM:
-                addPilgrim();
+                addPilgrim(-1);
                 break;
             case ENTER_GROUP:
-                addGroup();
+                addGroup(-1);
+                break;
+            case MODIFY_PILGRIM:
+                modifyPilgrim();
+                break;
+            case MODIFY_GROUP:
+                modifyGroup();
                 break;
             case SHOW_AVAILABLE_PILGRIMS:
                 showPilgrims();
@@ -115,7 +121,7 @@ public class MainInterface {
 
     private boolean askForSaving() {
         if (needsSaving) {
-            System.out.println("DO YOU WANT TO SAVE YOUR CHANGES BEFORE RELOADING? NO -> -1 | OTHERWISE YES");
+            System.out.print("DO YOU WANT TO SAVE YOUR CHANGES BEFORE RELOADING? YES -> 1 | NO -> -1");
             if (-1 != input.readNumber()) {
                 try {
                     saveChanges();
@@ -129,25 +135,21 @@ public class MainInterface {
         return true;
     }
 
-    private void addPilgrim() {
-        System.out.println("IF YOU WANT TO UPDATE A PILGRIM, ENTER THE ID, ELSE -1: ");
-
-        int id = input.readNumber();
-
+    private void addPilgrim(int id) {
         if (id == -1) {
             id = newIdForPilgrim;
             newIdForPilgrim++;
         }
 
-        System.out.println("ENTER PILGRIM NAME: ");
+        System.out.print("ENTER PILGRIM NAME: ");
 
         String name = input.readString();
 
-        System.out.println("IS THE PILGRIM A LEADER? Yes -> 1, OTHERWISE NO): ");
+        System.out.print("\nIS THE PILGRIM A LEADER? YES -> 1 | NO -> -1): ");
 
         boolean isLeader = input.readNumber() == 1;
 
-        System.out.println("AVAILABLE LANGUAGES: ");
+        System.out.println("\nAVAILABLE LANGUAGES: ");
 
         for (Language l : Language.values()) {
             System.out.print(l.toString() + ", ");
@@ -156,12 +158,11 @@ public class MainInterface {
         Language language = null;
 
         do {
-            System.out.println("ENTER THE PILGRIM'S NATIVE LANGUAGE: ");
+            System.out.print("ENTER THE PILGRIM'S NATIVE LANGUAGE: ");
             language = Utils.getLanguage(input.readString());
             if (language == null) {
                 System.out.println("LANGUAGE NOT SUPPORTED, TRY AGAIN. ");
             }
-
         } while (language == null);
 
         Pilgrim p = new Pilgrim(id, name, language, isLeader);
@@ -171,7 +172,7 @@ public class MainInterface {
         String inputString = "";
 
         do {
-            System.out.println("ENTER ANY OTHER LANGUAGE THE PILGRIM KNOWS (TYPE '0' TO END): ");
+            System.out.print("ENTER ANY OTHER LANGUAGE THE PILGRIM KNOWS (TYPE '0' TO END): ");
 
             inputString = input.readString();
 
@@ -195,11 +196,7 @@ public class MainInterface {
         needsSaving = true;
     }
 
-    private void addGroup() {
-        System.out.println("IF YOU WANT TO UPDATE A GROUP, ENTER THE ID, ELSE -1: ");
-
-        int id = input.readNumber();
-
+    private void addGroup(int id) {
         if (id == -1) {
             id = newIdForGroup;
             newIdForGroup++;
@@ -214,6 +211,23 @@ public class MainInterface {
         groups.put(id, g);
 
         needsSaving = true;
+    }
+
+    private void modifyPilgrim() {
+        System.out.print("ENTER THE ID TO MODIFY A PILGRIM: ");
+
+        int id = input.readNumber();
+
+        addPilgrim(id);
+
+    }
+
+    private void modifyGroup() {
+        System.out.print("ENTER THE ID TO MODIFY A GROUP: ");
+
+        int id = input.readNumber();
+
+        addPilgrim(id);
     }
 
     private void showPilgrims() {
@@ -253,12 +267,12 @@ public class MainInterface {
 
         System.out.println("THE ALGORITHM IS LOADING...");
 
-        System.out.println("WOULD YOU LIKE TO START FROM ZERO OR CONTINUE WITH ACTUAL SELECTION? 1 -> NEW | OTHERWISE -> ACTUAL");
+        System.out.println("WOULD YOU LIKE TO START FROM ZERO OR CONTINUE WITH ACTUAL SELECTION? NEW MIX -> 1 | USE ACTUAL -> -1");
         System.out.println("IF YOU START FROM ZERO, YOUR LAST SELECTION WILL BE DELETED.");
 
         boolean useFilter = -1 != input.readNumber();
 
-        System.out.println("WOULD YOU LIKE TO SHUFFLE THE PILGRIMS BEFORE MIXING? 1 -> YES | OTHERWISE -> NO");
+        System.out.println("WOULD YOU LIKE TO SHUFFLE THE PILGRIMS BEFORE MIXING? YES -> 1 | NO -> -1");
         System.out.println("IF SHUFFLING IS ENABLED, THE PROGRAM MAY TAKE MORE TIME TO ASSIGN GROUPS.");
 
         boolean useShuffle = -1 != input.readNumber();

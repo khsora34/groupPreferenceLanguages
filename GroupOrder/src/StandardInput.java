@@ -20,7 +20,6 @@ public class StandardInput {
             if (already) {
                 System.out.print("\nTRY AGAIN:");
             } else {
-                System.out.print("\nENTER A NUMBER:");
                 already = true;
             }
             entrada = keyboard.next();
@@ -36,7 +35,6 @@ public class StandardInput {
             if (already) {
                 System.out.print("\nTRY AGAIN:");
             } else {
-                System.out.print("\nENTER A CHARACTER:");
                 already = true;
             }
             entrada = keyboard.next();
@@ -45,7 +43,6 @@ public class StandardInput {
     }
 
     public String readString() {
-        System.out.print("ENTER ANY TEXT:");
         keyboard = new Scanner(System.in);
         return keyboard.nextLine();
     }
