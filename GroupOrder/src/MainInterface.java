@@ -92,9 +92,6 @@ public class MainInterface {
             case MODIFY_PILGRIM:
                 modifyPilgrim();
                 break;
-            case MODIFY_GROUP:
-                modifyGroup();
-                break;
             case SHOW_AVAILABLE_PILGRIMS:
                 showPilgrims();
                 break;
@@ -227,7 +224,7 @@ public class MainInterface {
 
         int id = input.readNumber();
 
-        addPilgrim(id);
+        addGroup(id);
     }
 
     private void showPilgrims() {
@@ -270,7 +267,7 @@ public class MainInterface {
         System.out.println("WOULD YOU LIKE TO START FROM ZERO OR CONTINUE WITH ACTUAL SELECTION? NEW MIX -> 1 | USE ACTUAL -> -1");
         System.out.println("IF YOU START FROM ZERO, YOUR LAST SELECTION WILL BE DELETED.");
 
-        boolean useFilter = -1 != input.readNumber();
+        boolean useFilter = 1 != input.readNumber();
 
         System.out.println("WOULD YOU LIKE TO SHUFFLE THE PILGRIMS BEFORE MIXING? YES -> 1 | NO -> -1");
         System.out.println("IF SHUFFLING IS ENABLED, THE PROGRAM MAY TAKE MORE TIME TO ASSIGN GROUPS.");
@@ -278,6 +275,10 @@ public class MainInterface {
         boolean useShuffle = -1 != input.readNumber();
 
         alg.startAlgorithm(useFilter, useShuffle);
+
+        pilgrims = alg.getPilgrimsMap();
+
+        groups = alg.getGroupsMap();
 
         System.out.println("ASSIGNMENT SUCCESFULLY ENDED.");
 
@@ -308,13 +309,14 @@ public class MainInterface {
         }
 
         for (int i = 0; i < pilgrimsGroups.length; i++) {
-            System.out.println("GROUP NUMBER " + (i+1) + ": ");
+            System.out.println("GROUP NUMBER " + (i+1) + ": has " + pilgrimsGroups[i].size() + " participants");
             for (Pilgrim p: pilgrimsGroups[i]) {
                 System.out.print(" - " + p.getName() + (p.isLeader()? ", is leader and" : ",") +  " speaks " + p.getNativeLanguage().name());
 
                 for(Language l: p.getOtherLanguages()) {
                     System.out.print(", " + l.name());
                 }
+                System.out.println("");
             }
             System.out.println("\n------------------------------------\n");
         }
@@ -328,7 +330,7 @@ public class MainInterface {
             System.exit(-1);
         }
 
-        connection.savePilgrims(pilgrims.values().toArray(new Pilgrim[0]));
+        connection.savePilgrims(pilgrims.values());
 
         for (Group g: groups.values()) {
             connection.saveGroup(g);

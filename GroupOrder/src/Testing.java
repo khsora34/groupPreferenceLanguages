@@ -12,7 +12,7 @@ public class Testing {
             connection.loadPilgrimResources();
             connection.loadGroupsResources();
 
-            connection.savePilgrims(new Pilgrim[]{new Pilgrim(1, "Pedro", Language.FRENCH, true), new Pilgrim(3, "Bien", Language.POLISH, false), new Pilgrim(29, "ISI", Language.FRENCH, true)});
+           // connection.savePilgrims(new Pilgrim[]{new Pilgrim(1, "Pedro", Language.FRENCH, true), new Pilgrim(3, "Bien", Language.POLISH, false), new Pilgrim(29, "ISI", Language.FRENCH, true)});
 
             for (Pilgrim p: connection.loadPilgrimResources().values()) {
                 System.out.println(p + "\n");

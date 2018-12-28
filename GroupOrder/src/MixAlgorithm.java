@@ -10,6 +10,14 @@ public class MixAlgorithm {
         this.groupsMap = groups;
     }
 
+    public Map<Integer, Pilgrim> getPilgrimsMap() {
+        return pilgrimsMap;
+    }
+
+    public Map<Integer, Group> getGroupsMap() {
+        return groupsMap;
+    }
+
     public void startAlgorithm(boolean useFilter, boolean useShuffle) {
 
         Pilgrim[] pilgrims = null;
@@ -124,7 +132,7 @@ public class MixAlgorithm {
 
     private Pilgrim[] shittyShuffle() {
         List<Pilgrim> list = Arrays.asList(pilgrimsMap.values().toArray(new Pilgrim[0]));
-        Collections.shuffle(list);
+        Collections.shuffle(list, new Random(new Date().getTime()));
         return list.toArray(new Pilgrim[0]);
     }
 
