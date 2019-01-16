@@ -6,7 +6,7 @@ The purpose of this application is to handle a system of pilgrims and groups whe
 A not very complex mix algorithm will form groups depending on their leadership (they are leaders/animators), and the languages they spoke.
 All this flow will be on live, meaning that the user can input a pilgrim and add they to a group using the mix algorithm.
 
-###Capabilities
+### Capabilities
 - Saving pilgrims on a database.
 - Saving groups on a database.
 - Using an algorithm to determine a possible mix of all the pilgrims. You can use it to start a new mix or to start mixing from the actual state.
