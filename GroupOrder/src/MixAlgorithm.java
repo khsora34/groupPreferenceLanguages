@@ -154,9 +154,8 @@ public class MixAlgorithm {
     private boolean canTalkWithOtherLanguagesInGroup(Group group, Set<Language> languages) {
         Set<Language> groupLanguages = group.getAllLanguages();
 
-        if (groupLanguages == null) {
-            System.out.println("WTF");
-            return false;
+        if (groupLanguages == null || groupLanguages.isEmpty()) {
+            return true;
         }
 
         boolean canTalkInTheGroup = false;
