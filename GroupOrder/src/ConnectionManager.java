@@ -246,6 +246,7 @@ public class ConnectionManager {
                 insertPilgrim(p);
             }
         }
+        conn.commit();
     }
 
     private void insertGroup(Group group) throws SQLException {
