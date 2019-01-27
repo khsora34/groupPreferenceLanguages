@@ -296,13 +296,15 @@ public class ConnectionManager {
         }
     }
 
-    public void saveGroup(Group group) throws SQLException {
-        if (group.getId() < lastGroupId) {
-            updateGroup(group);
-        } else {
-            insertGroup(group);
-        }
+    public void saveGroups(Collection<Group> groups) throws SQLException {
+        for (Group group: groups) {
+            if (group.getId() < lastGroupId) {
+                updateGroup(group);
+            } else {
+                insertGroup(group);
+            }
 
+        }
         conn.commit();
     }
 

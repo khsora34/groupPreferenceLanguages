@@ -331,10 +331,7 @@ public class MainInterface {
         }
 
         connection.savePilgrims(pilgrims.values());
-
-        for (Group g: groups.values()) {
-            connection.saveGroup(g);
-        }
+        connection.saveGroups(groups.values());
 
         connection.setLastPilgrimId(newIdForPilgrim);
         connection.setLastGroupId(newIdForGroup);
