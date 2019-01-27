@@ -1,6 +1,3 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -97,6 +94,9 @@ public class MainInterface {
             case MODIFY_PILGRIM:
                 modifyPilgrim();
                 break;
+            case MODIFY_GROUP:
+                modifyGroup();
+                break;
             case SHOW_AVAILABLE_PILGRIMS:
                 showPilgrims();
                 break;
@@ -123,7 +123,7 @@ public class MainInterface {
 
     private boolean askForSaving() {
         if (needsSaving) {
-            System.out.print("DO YOU WANT TO SAVE YOUR CHANGES BEFORE RELOADING? YES -> 1 | NO -> -1");
+            System.out.print("DO YOU WANT TO SAVE YOUR CHANGES BEFORE STARTING THIS OPERATION? YES -> 1 | NO -> -1");
             if (-1 != input.readNumber()) {
                 try {
                     saveChanges();
@@ -199,10 +199,8 @@ public class MainInterface {
     }
 
     private void addGroup(int id) {
-        if (id == -1) {
-            id = newIdForGroup;
-            newIdForGroup++;
-        }
+        id = newIdForGroup;
+        newIdForGroup++;
 
         System.out.println("ENTER GROUP's ROOM NAME: ");
 
@@ -229,7 +227,16 @@ public class MainInterface {
 
         int id = input.readNumber();
 
-        addGroup(id);
+        Group g = groups.get(id);
+
+        System.out.println("ENTER GROUP's ROOM NAME: ");
+
+        String name = input.readString();
+
+        g.setRoomName(name);
+
+        groups.put(id, g);
+
     }
 
     private void showPilgrims() {
