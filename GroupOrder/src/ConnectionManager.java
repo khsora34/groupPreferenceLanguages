@@ -69,7 +69,7 @@ public class ConnectionManager {
     }
 
     public Map<Integer, Group> loadGroupsResources() throws SQLException {
-        String query = "SELECT * FROM groupRoom";
+        String query = "SELECT * FROM groupRoom ORDER BY id ASC";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
         ResultSet rs = prepSt.executeQuery();
@@ -303,7 +303,6 @@ public class ConnectionManager {
             } else {
                 insertGroup(group);
             }
-
         }
         conn.commit();
     }
