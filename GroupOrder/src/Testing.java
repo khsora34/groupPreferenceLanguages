@@ -18,8 +18,8 @@ public class Testing {
                 System.out.println(p + "\n");
             }
 
-            connection.saveGroup(new Group(2, "LALALAND"));
-            connection.saveGroup(new Group(34, "NOCASA"));
+//            connection.saveGroup(new Group(2, "LALALAND"));
+//            connection.saveGroup(new Group(34, "NOCASA"));
 
             for (Group g: connection.loadGroupsResources().values()) {
                 System.out.println(g + "\n");

@@ -69,7 +69,7 @@ public class ConnectionManager {
     }
 
     public Map<Integer, Group> loadGroupsResources() throws SQLException {
-        String query = "SELECT * FROM groupRoom";
+        String query = "SELECT * FROM groupRoom ORDER BY id ASC";
         PreparedStatement prepSt = conn.prepareStatement(query);
 
         ResultSet rs = prepSt.executeQuery();
@@ -246,6 +246,7 @@ public class ConnectionManager {
                 insertPilgrim(p);
             }
         }
+        conn.commit();
     }
 
     private void insertGroup(Group group) throws SQLException {
@@ -295,13 +296,14 @@ public class ConnectionManager {
         }
     }
 
-    public void saveGroup(Group group) throws SQLException {
-        if (group.getId() < lastGroupId) {
-            updateGroup(group);
-        } else {
-            insertGroup(group);
+    public void saveGroups(Collection<Group> groups) throws SQLException {
+        for (Group group: groups) {
+            if (group.getId() < lastGroupId) {
+                updateGroup(group);
+            } else {
+                insertGroup(group);
+            }
         }
-
         conn.commit();
     }
 

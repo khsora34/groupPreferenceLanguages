@@ -18,6 +18,15 @@ public class MixAlgorithm {
         return groupsMap;
     }
 
+    private void cleanGroups() {
+        for(Group g: groupsMap.values()) {
+            g.setAllLanguages(null);
+            g.setNumberOfLeaders(0);
+            g.setNumberOfParticipants(0);
+            groupsMap.put(g.getId(), g);
+        }
+    }
+
     public void startAlgorithm(boolean useFilter, boolean useShuffle) {
 
         Pilgrim[] pilgrims = null;
@@ -30,6 +39,8 @@ public class MixAlgorithm {
 
         if (useFilter) {
             pilgrims = Arrays.stream(pilgrims).filter(s -> s.getGroupId() == -1).toArray(Pilgrim[]::new);
+        } else {
+            cleanGroups();
         }
 
         for (Pilgrim actualPilgrim : pilgrims) {
@@ -140,6 +151,9 @@ public class MixAlgorithm {
         pilgrim.setGroupId(group.getId());
         pilgrimsMap.put(pilgrim.getId(), pilgrim);
         Set languages = group.getAllLanguages();
+        if (languages == null) {
+            languages = new HashSet();
+        }
         languages.addAll(pilgrim.getOtherLanguages());
         languages.add(pilgrim.getNativeLanguage());
         group.setAllLanguages(languages);
@@ -154,9 +168,8 @@ public class MixAlgorithm {
     private boolean canTalkWithOtherLanguagesInGroup(Group group, Set<Language> languages) {
         Set<Language> groupLanguages = group.getAllLanguages();
 
-        if (groupLanguages == null) {
-            System.out.println("WTF");
-            return false;
+        if (groupLanguages == null || groupLanguages.isEmpty()) {
+            return true;
         }
 
         boolean canTalkInTheGroup = false;
