@@ -82,9 +82,9 @@ public class Pilgrim {
     @Override
     public String toString() {
         String start = "Pilgrim with id " + id + ", named " + name + ".\n" +
-                "Talks " + nativeLanguage;
-        for (Language e : otherLanguages) {
-            start = start.concat(", " + e.toString());
+                "Talks " + nativeLanguage.name();
+        for (Language l : otherLanguages) {
+            start = start.concat(", " + l.name());
         }
         start = start.concat(groupId == -1 ? "\nStill has no group." : "\nWorks in group " + groupId + ".");
         start = start.concat("\nThis pilgrim is " + (isLeader ? "" : "not ") + "a leader.");
