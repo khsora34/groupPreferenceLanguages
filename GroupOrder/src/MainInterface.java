@@ -22,9 +22,11 @@ public class MainInterface {
         input = new StandardInput();
     }
 
-    public void launchMainInterface() throws SQLException {
-        System.out.println("WELCOME TO GROUP ORDER.\n");
-        System.out.println("LAUNCHING DATABASE...\n");
+    private void loadDBData() throws SQLException {
+        pilgrims = null;
+        groups = null;
+
+        System.out.println("LOADING PILGRIMS INTO PROGRAM.");
 
         if (!connection.connectDb()) {
             System.out.println("UNABLE TO CONNECT TO DATABASE.");
@@ -33,16 +35,12 @@ public class MainInterface {
             System.exit(-1);
         }
 
-        System.out.println("SUCCESFULLY CONNECTED.\n");
-
-        System.out.println("LOADING PILGRIMS INTO PROGRAM.");
-
         pilgrims = connection.loadPilgrimResources();
 
         if (pilgrims.values().isEmpty()) {
-            System.out.println("STILL NO PILGRIMS IN THE DATABASE.\n");
+            System.out.println("STILL NO PILGRIMS IN THE DATABASE.");
         } else {
-            System.out.println("PILGRIMS LOADED SUCCESFULLY.\n");
+            System.out.println("PILGRIMS LOADED SUCCESFULLY.");
         }
 
         System.out.println("LOADING AVAILABLE ROOMS.");
@@ -50,17 +48,24 @@ public class MainInterface {
         groups = connection.loadGroupsResources();
 
         if (groups.values().isEmpty()) {
-            System.out.println("STILL NO GROUPS IN THE DATABASE.\n");
+            System.out.println("STILL NO GROUPS IN THE DATABASE.");
         } else {
-            System.out.println("ROOMS LOADED SUCCESFULLY.\n");
+            System.out.println("ROOMS LOADED SUCCESFULLY.");
         }
-
-        System.out.println("PROGRAM STARTED SUCCESFULLY.");
 
         newIdForPilgrim = connection.getLastPilgrimId();
         newIdForGroup = connection.getLastGroupId();
 
         connection.disconnect();
+    }
+
+    public void launchMainInterface() throws SQLException {
+        System.out.println("WELCOME TO GROUP ORDER.\n");
+        System.out.println("LAUNCHING DATABASE...\n");
+
+        loadDBData();
+
+        System.out.println("PROGRAM STARTED SUCCESFULLY.");
     }
 
     public void mainMenu() throws SQLException {
@@ -349,39 +354,9 @@ public class MainInterface {
             return;
         }
 
-        System.out.println("LOADING PILGRIMS INTO PROGRAM.");
-
-        if (!connection.connectDb()) {
-            System.out.println("UNABLE TO CONNECT TO DATABASE.");
-            System.out.println("PRESS ENTER TO EXIT THE PROGRAM..");
-            input.nextLine();
-            System.exit(-1);
-        }
-
-        pilgrims = connection.loadPilgrimResources();
-
-        if (pilgrims.values().isEmpty()) {
-            System.out.println("STILL NO PILGRIMS IN THE DATABASE.");
-        } else {
-            System.out.println("PILGRIMS LOADED SUCCESFULLY.");
-        }
-
-        System.out.println("LOADING AVAILABLE ROOMS.");
-
-        groups = connection.loadGroupsResources();
-
-        if (groups.values().isEmpty()) {
-            System.out.println("STILL NO GROUPS IN THE DATABASE.");
-        } else {
-            System.out.println("ROOMS LOADED SUCCESFULLY.");
-        }
-
-        newIdForPilgrim = connection.getLastPilgrimId();
-        newIdForGroup = connection.getLastGroupId();
+        loadDBData();
 
         System.out.println("\nPROGRAM RELOADED SUCCESSFULLY.\n");
-
-        connection.disconnect();
     }
 
     private void endSession() throws SQLException {
